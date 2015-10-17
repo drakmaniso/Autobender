@@ -125,8 +125,42 @@ function AutobenderWindow:gui ()
                 end,
             },
 
-
         },
+
+
+        vb:horizontal_aligner
+        {
+            mode = "center",
+            vb:valuebox
+            {
+                id = "step",
+                width = 200,
+                min = 0,
+                max = 16 + 2,
+                value = 3,
+                tostring = function(n)
+                    if n == 0 then
+                        return "8 points per line"
+                    elseif n == 1 then
+                        return "4 points per line"
+                    elseif n == 2 then
+                        return "2 points per line"
+                    elseif n == 3 then
+                        return "1 point per line"
+                    else
+                        return "1 point every " .. n - 2 .. " lines"
+                    end
+                end,
+                tonumber = function(s)
+                    return 3
+                end,
+                notifier = function()
+                    self.autobender.need_update = true
+                end,
+            },
+        },
+
+
     }
 
     return result

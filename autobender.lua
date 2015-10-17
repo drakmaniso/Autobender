@@ -240,14 +240,27 @@ function Autobender:update_automation()
         local end_value = views["end"].value
         local curvature = views["curve"].value.y
         local shape = views["curve"].value.x
+        local step = views["step"].value
+
         if start_value > end_value then
             curvature = - curvature
         end
+
+        if step == 0 then
+            step = 1.0 / 8.0
+        elseif step == 1 then
+            step = 1.0 / 4.0
+        elseif step == 2 then
+            step = 1.0 / 2.0
+        else
+            step = step - 2
+        end
+
         self.in_automation_update = true
         automation:clear_range(automation.selection_start, automation.selection_end)
         automation:add_point_at(automation.selection_start, start_value)
         automation:add_point_at(automation.selection_end, end_value)
-        for p = automation.selection_start + 1, automation.selection_end do
+        for p = automation.selection_start + step, automation.selection_end, step do
             local v = point_on_curve(p, automation.selection_start, start_value, automation.selection_end, end_value, curvature, shape)
             if v < 0.0 then v = 0.0 end
             if v > 1.0 then v = 1.0 end

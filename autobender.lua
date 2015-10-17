@@ -20,7 +20,7 @@ function Autobender:__init()
     )
     self:handle_pattern_track_change()
 
-    self.need_update = true
+    self.need_update = false
     renoise.tool().app_idle_observable:add_notifier(
         function()
             if self.need_update then
@@ -90,7 +90,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 
-function curve(position, curvature, shape)
+local function curve(position, curvature, shape)
 
     local exp_curvature = (100000.0 ^ (1.0 + math.abs(curvature))) / 100000.0
     local circ_curvature = 1.0 - ((1000.0 ^ (1.0 - math.abs(curvature))) - 1.0) / (1000.0 - 1.0)
@@ -138,19 +138,9 @@ function curve(position, curvature, shape)
 
     else
 
-        exp_result = position
-        circ_result = position
-        sin_result = position
-
-        if shape < 0.0 then
-            shape = shape + 1.0
-            result = shape * circ_result + (1.0 - shape) * sin_result
-        else
-            result = shape * exp_result + (1.0 - shape) * circ_result
-        end
+        result = position
 
     end
-
 
     return result
 
@@ -220,8 +210,6 @@ function Autobender:handle_selection_range_change()
             views["start"].active = true
             views["end"].value = end_value
             views["end"].active = true
-            -- views["curve"].value = { x = 0.0, y = 0.0 }
-            -- views["curve"].visible = true
             self.in_ui_update = false
         else
             self.in_ui_update = true
@@ -231,8 +219,6 @@ function Autobender:handle_selection_range_change()
             views["start"].active = false
             views["end"].value = 0.0
             views["end"].active = false
-            -- views["curve"].value = { x = 0.0, y = 0.0 }
-            -- views["curve"].visible = false
             self.in_ui_update = false
         end
     end
@@ -252,8 +238,6 @@ function Autobender:update_automation()
         local views = self.window.vb.views
         local start_value = views["start"].value
         local end_value = views["end"].value
-        -- local curvature = views["curvature"].value
-        -- local shape = views["shape"].value
         local curvature = views["curve"].value.y
         local shape = views["curve"].value.x
         if start_value > end_value then

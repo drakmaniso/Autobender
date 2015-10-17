@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>Autobender</Name>
+  <Id>org.drakmaniso.Autobender</Id>
+  <Version>0.01</Version>
+  <ApiVersion>5</ApiVersion>
+  <Author>drakmaniso | moussault.laurent@gmail.com</Author>
+  <AutoUpgraded>false</AutoUpgraded>
+  <Category>Automation</Category>
+  <Description>A simple tool to automation curves.</Description>
+  <Homepage>http://tools.renoise.com</Homepage>
+</RenoiseScriptingTool>

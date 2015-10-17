@@ -1,0 +1,204 @@
+class "AutobenderWindow"
+
+
+----------------------------------------------------------------------------------------------------
+
+
+function AutobenderWindow:__init(autobender)
+    self.vb = renoise.ViewBuilder()
+    self.autobender = autobender
+end
+
+
+----------------------------------------------------------------------------------------------------
+
+
+function AutobenderWindow:show_dialog ()
+
+    if self.dialog and self.dialog.visible then
+        self.dialog:show ()
+        return
+    end
+
+    if not self.dialog_content then
+        self.dialog_content = self:gui ()
+    end
+
+    local kh = function (d, k) return self:key_handler (d, k) end
+    self.dialog = renoise.app():show_custom_dialog ("Autobender", self.dialog_content, kh)
+
+end
+
+
+----------------------------------------------------------------------------------------------------
+
+
+function AutobenderWindow:key_handler (dialog, key)
+    if key.modifiers == "" and key.name == "esc" then
+        dialog:close()
+    else
+        return key
+    end
+end
+
+
+----------------------------------------------------------------------------------------------------
+
+
+function AutobenderWindow:gui ()
+
+    local vb = self.vb
+
+    local dialog_margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN
+    local dialog_spacing = renoise.ViewBuilder.DEFAULT_DIALOG_SPACING
+    local control_margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
+    local control_spacing = renoise.ViewBuilder.DEFAULT_CONTROL_SPACING
+    local control_height = renoise.ViewBuilder.DEFAULT_CONTROL_HEIGHT
+
+    local result = vb:column
+    {
+        style = "body",
+        -- width = 300,
+        height = 400,
+        margin = dialog_margin,
+        spacing = dialog_spacing,
+        uniform = true,
+
+        vb:text
+        {
+            id = "status",
+            text = "(No selection)",
+            width = "100%",
+            font = "big",
+            --active = false,
+            align = "center",
+        },
+
+        vb:horizontal_aligner
+        {
+            width = "100%",
+            mode = "justify",
+
+            vb:minislider
+            {
+                id = "start",
+                height = 200,
+                width = 24,
+                notifier = function(value)
+                    local automation = self.autobender.automation
+                    if automation and not self.autobender.in_ui_update then
+                        --automation:add_point_at(automation.selection_start, value)
+                        vb.views["status"].text = "Start: " .. (math.floor(value * 100.0 + 0.5) / 1.0)
+                        self.autobender.need_update = true
+                        -- autobender:update_automation()
+                    end
+                end,
+            },
+            vb:column { width = 8 },
+
+
+            -- vb:vertical_aligner
+            -- {
+            --     mode = "distribute",
+            --
+            --     vb:column
+            --     {
+            --         width = 100,
+            --         vb:horizontal_aligner
+            --         {
+            --             mode = "center",
+            --             vb:rotary
+            --             {
+            --                 id = "curvature",
+            --                 width = 96,
+            --                 height = 96,
+            --                 min = -1.0,
+            --                 max = 1.0,
+            --                 value = 0.0,
+            --                 notifier = function(value)
+            --                     local automation = autobender.automation
+            --                     if automation and not autobender.in_ui_update then
+            --                         vb.views["status"].text = "Curvature: " .. math.floor(value * 100.0 + 0.5)
+            --                         autobender:update_automation()
+            --                     end
+            --                 end,
+            --             },
+            --         },
+            --         vb:horizontal_aligner
+            --         {
+            --             mode = "center",
+            --             vb:text { text = "Curvature"},
+            --         },
+            --     },
+            --
+            --
+            --     vb:column
+            --     {
+            --         width = 100,
+            --         vb:horizontal_aligner
+            --         {
+            --             mode = "center",
+            --             vb:rotary
+            --             {
+            --                 id = "shape",
+            --                 width = 48,
+            --                 height = 48,
+            --                 min = -1.0,
+            --                 max = 1.0,
+            --                 value = 1.0,
+            --                 notifier = function(value)
+            --                     local automation = autobender.automation
+            --                     if automation and not autobender.in_ui_update then
+            --                         vb.views["status"].text = "Shape: " .. math.floor((1.0 + value) * 50.0 + 0.5)
+            --                         autobender:update_automation()
+            --                     end
+            --                 end,
+            --             },
+            --         },
+            --         vb:horizontal_aligner
+            --         {
+            --             mode = "center",
+            --             vb:text { text = "Shape"},
+            --         },
+            --     },
+            --
+            --
+            -- },
+            vb:xypad
+            {
+                id = "curve",
+                height = 200,
+                width = 200,
+                min = {x = -1.0, y = -1.0},
+                max = {x = 1.0, y = 1.0},
+                notifier = function(value)
+                    local automation = self.autobender.automation
+                    if automation and not self.autobender.in_ui_update then
+                        vb.views["status"].text = "Curvature: " .. math.floor(value.y * 100.0 + 0.5) .. "   Shape: " .. math.floor((1.0 + value.x) * 50.0 + 0.5)
+                        self.autobender.need_update = true
+                        -- autobender:update_automation()
+                    end
+                end,
+            },
+            vb:column { width = 8 },
+            vb:minislider
+            {
+                id = "end",
+                height = 200,
+                width = 24,
+                notifier = function(value)
+                    local automation = self.autobender.automation
+                    if automation and not self.autobender.in_ui_update then
+                        --automation:add_point_at(automation.selection_end, value)
+                        vb.views["status"].text = "End: " .. (math.floor(value * 100.0 + 0.5) / 1.0)
+                        self.autobender.need_update = true
+                        -- autobender:update_automation()
+                    end
+                end,
+            },
+        },
+    }
+
+    return result
+
+end

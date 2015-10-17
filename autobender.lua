@@ -205,7 +205,7 @@ function Autobender:handle_selection_range_change()
 
             self.in_ui_update = true
             local views = self.window.vb.views
-            views["status"].text = "Selection: " .. selection_start .. " -  " .. selection_end
+            views["status"].text = "Selection: " .. selection_start - 1 .. " -  " .. selection_end - 1
             views["start"].value = start_value
             views["start"].active = true
             views["end"].value = end_value

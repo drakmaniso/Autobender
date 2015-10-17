@@ -80,83 +80,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 
-local function point_on_line(x, x1, y1, x2, y2)
-    local a = (y1 - y2) / (x1 - x2)
-    local b = y1 - a * x1
-    return a * x + b
-end
-
-
-----------------------------------------------------------------------------------------------------
-
-
-local function curve(position, curvature, shape)
-
-    local exp_curvature = (100000.0 ^ (1.0 + math.abs(curvature))) / 100000.0
-    local circ_curvature = 1.0 - ((1000.0 ^ (1.0 - math.abs(curvature))) - 1.0) / (1000.0 - 1.0)
-    local sin_curvature = math.abs(curvature)
-    local exp_result, circ_result, sin_result, result
-    local pi = math.pi
-
-    if curvature > 0.01 then
-
-        exp_result = 1.0 - ((exp_curvature ^ (1.0 - position)) - 1.0) / (exp_curvature - 1.0)
-
-        local new_position = (circ_curvature * position + (1.0 - circ_curvature) * 0.5)
-        local angle = math.acos(1.0 - new_position)
-        circ_result = math.sin(angle)
-        circ_result = (circ_result - math.sin(math.acos(1.0 - ((1.0 - circ_curvature) * 0.5))))
-            / (math.sin(math.acos(1.0 - (circ_curvature + (1.0 - circ_curvature) * 0.5))) - math.sin(math.acos(1.0 - ((1.0 - circ_curvature) * 0.5))))
-
-        sin_result = (1.0 - sin_curvature) * position + sin_curvature * math.sin(position * pi/2.0)
-
-        if shape < 0.0 then
-            shape = shape + 1.0
-            result = shape * circ_result + (1.0 - shape) * exp_result
-        else
-            result = shape * sin_result + (1.0 - shape) * circ_result
-        end
-
-    elseif curvature < -0.01 then
-
-        exp_result = ((exp_curvature ^ position) - 1.0) / (exp_curvature - 1.0)
-
-        local new_position = (circ_curvature * position + (1.0 - circ_curvature) * 0.5)
-        local angle = math.acos(new_position)
-        circ_result = 1.0 - math.sin(angle)
-        circ_result = (circ_result - (1.0 - math.sin(math.acos((1.0 - circ_curvature) * 0.5))))
-            / (1.0 - math.sin(math.acos(circ_curvature + (1.0 - circ_curvature) * 0.5)) - 1.0 + math.sin(math.acos((1.0 - circ_curvature) * 0.5)))
-
-        sin_result = (1.0 - sin_curvature) * position + sin_curvature * (math.sin(3.0*math.pi/2.0 + position * math.pi/2.0) + 1.0)
-
-        if shape < 0.0 then
-            shape = shape + 1.0
-            result = shape * circ_result + (1.0 - shape) * sin_result
-        else
-            result = shape * exp_result + (1.0 - shape) * circ_result
-        end
-
-    else
-
-        result = position
-
-    end
-
-    return result
-
-end
-
-
-local function point_on_curve(x, x1, y1, x2, y2, curvature, shape)
-    local position = (x - x1) / (x2 - x1)
-    local value = curve(position, curvature, shape)
-    return y1 + value * (y2 - y1)
-end
-
-
-----------------------------------------------------------------------------------------------------
-
-
 function Autobender:handle_selection_range_change()
     if self.window.dialog.visible then
         local pattern_track = renoise.song().selected_pattern_track
@@ -187,7 +110,7 @@ function Autobender:handle_selection_range_change()
             end
             local start_value = 0
             if start_prec and start_next then
-                start_value = point_on_line(selection_start, start_prec.time, start_prec.value, start_next.time, start_next.value)
+                start_value = self:point_on_line(selection_start, start_prec.time, start_prec.value, start_next.time, start_next.value)
             elseif start_prec then
                 start_value = start_prec.value
             elseif start_next then
@@ -195,7 +118,7 @@ function Autobender:handle_selection_range_change()
             end
             local end_value = 0
             if end_prec and end_next then
-                end_value = point_on_line(selection_end, end_prec.time, end_prec.value, end_next.time, end_next.value)
+            end_value = self:point_on_line(selection_end, end_prec.time, end_prec.value, end_next.time, end_next.value)
             elseif end_next then
                 end_value = end_next.value
             elseif end_prec then
@@ -228,6 +151,16 @@ end
 ----------------------------------------------------------------------------------------------------
 
 
+function Autobender:point_on_line(x, x1, y1, x2, y2)
+    local a = (y1 - y2) / (x1 - x2)
+    local b = y1 - a * x1
+    return a * x + b
+end
+
+
+----------------------------------------------------------------------------------------------------
+
+
 function Autobender:update_automation()
     local automation = self.automation
     if
@@ -238,7 +171,8 @@ function Autobender:update_automation()
         local views = self.window.vb.views
         local start_value = views["start"].value
         local end_value = views["end"].value
-        local curvature = views["curve"].value.y
+        local sign = views["curve"].value.y
+        local curvature = math.abs(sign)
         local shape = views["curve"].value.x
         local step = views["step"].value
 
@@ -261,13 +195,80 @@ function Autobender:update_automation()
         automation:add_point_at(automation.selection_start, start_value)
         automation:add_point_at(automation.selection_end, end_value)
         for p = automation.selection_start + step, automation.selection_end, step do
-            local v = point_on_curve(p, automation.selection_start, start_value, automation.selection_end, end_value, curvature, shape)
+            local v = self:point_on_curve(p, automation.selection_start, start_value, automation.selection_end, end_value, sign, curvature, shape)
             if v < 0.0 then v = 0.0 end
             if v > 1.0 then v = 1.0 end
             automation:add_point_at(p, v)
         end
         self.in_automation_update = false
     end
+end
+
+
+----------------------------------------------------------------------------------------------------
+
+
+function Autobender:point_on_curve(x, x1, y1, x2, y2, sign, curvature, shape)
+    local position = (x - x1) / (x2 - x1)
+    local value = self:curve(position, sign, curvature, shape)
+    return y1 + value * (y2 - y1)
+end
+
+
+function Autobender:curve(position, sign, curvature, shape)
+
+    local exp_curvature = (100000.0 ^ (1.0 + curvature)) / 100000.0
+    local circ_curvature = 1.0 - ((1000.0 ^ (1.0 - curvature)) - 1.0) / (1000.0 - 1.0)
+    local sin_curvature = curvature
+    local exp_result, circ_result, sin_result, result
+    local pi = math.pi
+
+    if sign > 0.01 then
+
+        exp_result = 1.0 - ((exp_curvature ^ (1.0 - position)) - 1.0) / (exp_curvature - 1.0)
+
+        local new_position = (circ_curvature * position + (1.0 - circ_curvature) * 0.5)
+        local angle = math.acos(1.0 - new_position)
+        circ_result = math.sin(angle)
+        circ_result = (circ_result - math.sin(math.acos(1.0 - ((1.0 - circ_curvature) * 0.5))))
+            / (math.sin(math.acos(1.0 - (circ_curvature + (1.0 - circ_curvature) * 0.5))) - math.sin(math.acos(1.0 - ((1.0 - circ_curvature) * 0.5))))
+
+        sin_result = (1.0 - sin_curvature) * position + sin_curvature * math.sin(position * pi/2.0)
+
+        if shape < 0.0 then
+            shape = shape + 1.0
+            result = shape * circ_result + (1.0 - shape) * exp_result
+        else
+            result = shape * sin_result + (1.0 - shape) * circ_result
+        end
+
+    elseif sign < -0.01 then
+
+        exp_result = ((exp_curvature ^ position) - 1.0) / (exp_curvature - 1.0)
+
+        local new_position = (circ_curvature * position + (1.0 - circ_curvature) * 0.5)
+        local angle = math.acos(new_position)
+        circ_result = 1.0 - math.sin(angle)
+        circ_result = (circ_result - (1.0 - math.sin(math.acos((1.0 - circ_curvature) * 0.5))))
+            / (1.0 - math.sin(math.acos(circ_curvature + (1.0 - circ_curvature) * 0.5)) - 1.0 + math.sin(math.acos((1.0 - circ_curvature) * 0.5)))
+
+        sin_result = (1.0 - sin_curvature) * position + sin_curvature * (math.sin(3.0*math.pi/2.0 + position * math.pi/2.0) + 1.0)
+
+        if shape < 0.0 then
+            shape = shape + 1.0
+            result = shape * circ_result + (1.0 - shape) * sin_result
+        else
+            result = shape * exp_result + (1.0 - shape) * circ_result
+        end
+
+    else
+
+        result = position
+
+    end
+
+    return result
+
 end
 
 

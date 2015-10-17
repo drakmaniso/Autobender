@@ -100,12 +100,13 @@ function AutobenderWindow:gui ()
                 id = "curve",
                 height = 200,
                 width = 200,
-                min = {x = -1.0, y = -1.0},
+                min = {x = 0.0, y = 0.0},
                 max = {x = 1.0, y = 1.0},
+                value = {x = 0.5, y = 0.5},
                 notifier = function(value)
                     local automation = self.autobender.automation
                     if automation and not self.autobender.in_ui_update then
-                        vb.views["status"].text = "Curvature: " .. math.floor(value.y * 100.0 + 0.5) .. "   Shape: " .. math.floor((1.0 + value.x) * 50.0 + 0.5)
+                        vb.views["status"].text = "X: " .. math.floor(value.x * 100.0 + 0.5) .. "   Y: " .. math.floor(value.y * 100.0 + 0.5)
                         self.autobender.need_update = true
                     end
                 end,

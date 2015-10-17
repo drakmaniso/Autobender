@@ -169,17 +169,46 @@ function Autobender:update_automation()
         and automation.selection_end < automation.length + 1
     then
         local views = self.window.vb.views
+
         local start_value = views["start"].value
         local end_value = views["end"].value
-        local sign = views["curve"].value.y
-        local curvature = math.abs(sign)
-        local shape = views["curve"].value.x
-        local step = views["step"].value
 
-        if start_value > end_value then
-            curvature = - curvature
+        local curve_x = views["curve"].value.x
+        local curve_y = views["curve"].value.y
+        local sign
+        local curvature
+        local shape
+        if start_value < end_value then
+            if curve_x == curve_y then
+                sign = 0.0
+                curvature = 0.0
+                shape = 0.0
+            elseif curve_y > curve_x then
+                sign = 1.0
+                curvature = (curve_y - curve_x) / (1.0 - curve_x)
+                shape = 1.0 - curve_x
+            else
+                sign = -1.0
+                curvature = 1.0 - curve_y / curve_x
+                shape = curve_x
+            end
+        else
+            if curve_x == (1.0 - curve_y) then
+                sign = 0.0
+                curvature = 0.0
+                shape = 0.0
+            elseif curve_x > (1.0 - curve_y) then
+                sign = -1.0
+                curvature = (curve_y - (1.0 - curve_x)) / curve_x
+                shape = curve_x
+            else
+                sign = 1.0
+                curvature = 1.0 - (curve_y / (1.0 - curve_x))
+                shape = 1.0 - curve_x
+            end
         end
 
+        local step = views["step"].value
         if step == 0 then
             step = 1.0 / 8.0
         elseif step == 1 then
@@ -220,6 +249,7 @@ function Autobender:curve(position, sign, curvature, shape)
     local exp_curvature = (100000.0 ^ (1.0 + curvature)) / 100000.0
     local circ_curvature = 1.0 - ((1000.0 ^ (1.0 - curvature)) - 1.0) / (1000.0 - 1.0)
     local sin_curvature = curvature
+
     local exp_result, circ_result, sin_result, result
     local pi = math.pi
 
@@ -235,13 +265,6 @@ function Autobender:curve(position, sign, curvature, shape)
 
         sin_result = (1.0 - sin_curvature) * position + sin_curvature * math.sin(position * pi/2.0)
 
-        if shape < 0.0 then
-            shape = shape + 1.0
-            result = shape * circ_result + (1.0 - shape) * exp_result
-        else
-            result = shape * sin_result + (1.0 - shape) * circ_result
-        end
-
     elseif sign < -0.01 then
 
         exp_result = ((exp_curvature ^ position) - 1.0) / (exp_curvature - 1.0)
@@ -254,17 +277,26 @@ function Autobender:curve(position, sign, curvature, shape)
 
         sin_result = (1.0 - sin_curvature) * position + sin_curvature * (math.sin(3.0*math.pi/2.0 + position * math.pi/2.0) + 1.0)
 
-        if shape < 0.0 then
-            shape = shape + 1.0
-            result = shape * circ_result + (1.0 - shape) * sin_result
-        else
-            result = shape * exp_result + (1.0 - shape) * circ_result
-        end
-
     else
 
-        result = position
+        sin_result = position
+        circ_result = position
+        exp_result = position
 
+    end
+
+    shape = 2.0 * shape
+    if shape < 1.0 then
+        shape = 2.0 * shape
+        if shape < 1.0 then
+            result = (1.0 - shape) * position + shape * sin_result
+        else
+            shape = shape - 1.0
+            result = (1.0 - shape) * sin_result + shape * circ_result
+        end
+    else
+        shape = shape - 1.0
+        result = (1.0 - shape) * circ_result + shape * exp_result
     end
 
     return result

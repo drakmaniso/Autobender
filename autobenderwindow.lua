@@ -219,42 +219,6 @@ function AutobenderWindow:update_curvature_and_shape_rotaries()
 
     local curve_x = self.vb.views["curve"].value.x
     local curve_y = self.vb.views["curve"].value.y
-    -- local sign
-    -- local curvature
-    -- local shape
-    -- if start_value < end_value then
-    --     if curve_x == curve_y then
-    --         sign = 0.0
-    --         curvature = 0.0
-    --         shape = 0.0
-    --     elseif curve_y > curve_x then
-    --         sign = 1.0
-    --         curvature = (curve_y - curve_x) / (1.0 - curve_x)
-    --         shape = 1.0 - curve_x
-    --     else
-    --         sign = -1.0
-    --         curvature = 1.0 - curve_y / curve_x
-    --         shape = curve_x
-    --     end
-    -- else
-    --     if curve_x == (1.0 - curve_y) then
-    --         sign = 0.0
-    --         curvature = 0.0
-    --         shape = 0.0
-    --     elseif curve_x > (1.0 - curve_y) then
-    --         sign = -1.0
-    --         curvature = (curve_y - (1.0 - curve_x)) / curve_x
-    --         shape = curve_x
-    --     else
-    --         sign = 1.0
-    --         curvature = 1.0 - (curve_y / (1.0 - curve_x))
-    --         shape = 1.0 - curve_x
-    --     end
-    -- end
-    -- curvature = sign * curvature
-    --
-    -- self.vb.views["curvature"].value = curvature
-    -- self.vb.views["shape"].value = shape
 
     self.vb.views["curvature"].value = 2.0 * curve_y - 1.0
     self.vb.views["shape"].value = curve_x

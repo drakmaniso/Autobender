@@ -189,6 +189,9 @@ function Autobender:update_automation()
         local end_value = views["end"].value
 
         local curvature = views["curvature"].value
+        if start_value > end_value then
+            curvature = - curvature
+        end
         local shape = views["shape"].value
 
         local step = views["step"].value

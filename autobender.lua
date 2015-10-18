@@ -190,7 +190,7 @@ function Autobender:update_automation()
 
         local curvature = views["curvature"].value / 1000.0
         if start_value > end_value then
-            curvature = - curvature
+            --curvature = - curvature
         end
         local shape = views["shape"].value / 1000.0
 
@@ -238,50 +238,54 @@ function Autobender:point_on_curve(x, x1, y1, x2, y2, curvature, shape)
 end
 
 
-function Autobender:curve(x, curvature, shape)
+function Autobender:curve(x, curvature, esser)
 
     local result
 
-    -- local first_shape -- = self.window.vb.views["first_shape"].value
-    -- local second_shape -- = self.window.vb.views["second_shape"].value
     local mode = self.window.vb.views["mode"].value
-    -- local mode_shapes = {
-    --     {1, 2},
-    --     {3, 4},
-    --     {5, 3}
-    -- }
-    -- result = mix(
-    --     curve_functions[mode_shapes[mode][1]](x, curvature),
-    --     curve_functions[mode_shapes[mode][2]](x, curvature),
-    --     shape
-    -- )
+    local shape = self.window.vb.views["esser"].value
+    local total_length = 1.0 + esser
+
     if mode == 1 then
-        result = mix(
-            curve_exponential(x, curvature),
-            curve_logarithmic(x, curvature),
-            shape
-        )
-    elseif mode == 2 then
-        result = mix(
-            curve_half_sinusoidal(x, curvature),
-            curve_circular(x, curvature),
-            shape
-        )
-    else
-        shape = shape * 2.0
-        if shape < 1.0 then
+
+        local orig_exponential = curve_exponential(esser, curvature)
+        local height_exponential = 1.0 + orig_exponential
+        local orig_logarithmic = curve_logarithmic(esser, curvature)
+        local height_logarithmic = 1.0 + orig_logarithmic
+        if x > esser / total_length then
             result = mix(
-                curve_sinusoidal(x, curvature),
-                curve_half_sinusoidal(x, curvature),
+                orig_exponential/height_exponential + curve_exponential((x - esser / total_length) * total_length, curvature) / height_exponential,
+                orig_logarithmic/height_logarithmic + curve_logarithmic((x - esser / total_length) * total_length, curvature) / height_logarithmic,
                 shape
             )
         else
             result = mix(
-                curve_half_sinusoidal(x, curvature),
-                curve_circular(x, curvature),
-                shape - 1.0
+                orig_exponential/height_exponential - curve_exponential(esser - x * total_length, curvature) / height_exponential,
+                orig_logarithmic/height_logarithmic - curve_logarithmic(esser - x * total_length, curvature) / height_logarithmic,
+                shape
             )
         end
+
+    else
+
+        local orig_half_sinusoidal = curve_half_sinusoidal(esser, curvature)
+        local height_half_sinusoidal = 1.0 + orig_half_sinusoidal
+        local orig_circular = curve_circular(esser, curvature)
+        local height_circular = 1.0 + orig_circular
+        if x > esser / total_length then
+            result = mix(
+                orig_half_sinusoidal/height_half_sinusoidal + curve_half_sinusoidal((x - esser / total_length) * total_length, curvature) / height_half_sinusoidal,
+                orig_circular/height_circular + curve_circular((x - esser / total_length) * total_length, curvature) / height_circular,
+                shape
+            )
+        else
+            result = mix(
+                orig_half_sinusoidal/height_half_sinusoidal - curve_half_sinusoidal(esser - x * total_length, curvature) / height_half_sinusoidal,
+                orig_circular/height_circular - curve_circular(esser - x * total_length, curvature) / height_circular,
+                shape
+            )
+        end
+
     end
 
     return result

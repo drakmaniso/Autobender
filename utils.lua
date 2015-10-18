@@ -12,7 +12,7 @@ end
 
 function curve_exponential(x, curvature)
     local scale = 1.0
-    local b = -16.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
+    local b = -6.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
     if math.abs(curvature) > 0.01 then
         return (math.exp(b * x) - 1.0) / (math.exp(b) - 1.0)
     else
@@ -23,7 +23,7 @@ end
 
 function curve_logarithmic(x, curvature)
     local scale = 1.0
-    local b = 16.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
+    local b = 6.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
     if math.abs(curvature) > 0.01 then
         return math.log(x * (math.exp(b) - 1.0) + 1.0) / b
     else

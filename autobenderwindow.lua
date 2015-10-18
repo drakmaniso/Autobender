@@ -115,7 +115,7 @@ function AutobenderWindow:gui ()
                 {
                     id = "mode",
                     width = "100%",
-                    items = {"exp", "sin", "arc"},
+                    items = {"exponential", "sinusoidal"},
                     notifier = function(value)
                         self.autobender.need_update = true
                     end,
@@ -123,21 +123,16 @@ function AutobenderWindow:gui ()
 
                 vb:row { height = 8, },
 
-                vb:xypad
+                vb:minislider
                 {
-                    id = "curve",
-                    height = 200,
-                    width = 200,
-                    min = {x = 0.0, y = -1.0},
-                    max = {x = 1.0, y = 1.0},
-                    value = {x = 0.0, y = 0.0},
+                    id = "esser",
+                    width = "100%",
+                    height = 16,
+                    min = 0.0,
+                    max = 1.0,
+                    value = 0.0,
                     notifier = function(value)
-                        local automation = self.autobender.automation
-                        if automation and not self.autobender.in_ui_update then
-                            vb.views["status"].text = "X: " .. math.floor(value.x * 100.0 + 0.5) .. "   Y: " .. math.floor(value.y * 100.0 + 0.5)
-                            self:update_curvature_and_shape_rotaries()
-                            self.autobender.need_update = true
-                        end
+                        self.autobender.need_update = true
                     end,
                 },
 
@@ -193,6 +188,26 @@ function AutobenderWindow:gui ()
                             return tonumber(s) * 10
                         end,
                     },
+                },
+
+                vb:row { height = 8, },
+
+                vb:xypad
+                {
+                    id = "curve",
+                    height = 200,
+                    width = 200,
+                    min = {x = 0.0, y = -1.0},
+                    max = {x = 1.0, y = 1.0},
+                    value = {x = 0.0, y = 0.0},
+                    notifier = function(value)
+                        local automation = self.autobender.automation
+                        if automation and not self.autobender.in_ui_update then
+                            vb.views["status"].text = "X: " .. math.floor(value.x * 100.0 + 0.5) .. "   Y: " .. math.floor(value.y * 100.0 + 0.5)
+                            self:update_curvature_and_shape_rotaries()
+                            self.autobender.need_update = true
+                        end
+                    end,
                 },
 
             },

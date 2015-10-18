@@ -280,7 +280,8 @@ end
 ----------------------------------------------------------------------------------------------------
 
 function Autobender:curve_exponential(x, curvature)
-    local b = -16.0 * curvature * (math.exp(1.0 * math.abs(curvature)) - 1.0) / (math.exp(1.0) - 1.0)
+    local scale = 1.0
+    local b = -16.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
     if math.abs(curvature) > 0.01 then
         return (math.exp(b * x) - 1.0) / (math.exp(b) - 1.0)
     else
@@ -290,7 +291,8 @@ end
 
 
 function Autobender:curve_logarithmic(x, curvature)
-    local b = 16.0 * curvature * (math.exp(1.0 * math.abs(curvature)) - 1.0) / (math.exp(1.0) - 1.0)
+    local scale = 1.0
+    local b = 16.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
     if math.abs(curvature) > 0.01 then
         return math.log(x * (math.exp(b) - 1.0) + 1.0) / b
     else
@@ -299,7 +301,6 @@ function Autobender:curve_logarithmic(x, curvature)
 end
 
 function Autobender:curve_circular(x, curvature)
-    --local b = curvature * (math.exp(4.0 * math.abs(curvature)) - 1.0) / (math.exp(4.0) - 1.0)
     local b = curvature
     if math.abs(curvature) > 0.01 then
         local new_position = (b * x + (1.0 - b) * 0.5)

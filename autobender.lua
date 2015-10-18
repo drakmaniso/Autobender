@@ -268,22 +268,42 @@ function Autobender:curve(x, curvature, esser)
 
     else
 
-        local orig_half_sinusoidal = curve_half_sinusoidal(esser, curvature)
-        local height_half_sinusoidal = 1.0 + orig_half_sinusoidal
-        local orig_circular = curve_circular(esser, curvature)
-        local height_circular = 1.0 + orig_circular
-        if x > esser / total_length then
-            result = mix(
-                orig_half_sinusoidal/height_half_sinusoidal + curve_half_sinusoidal((x - esser / total_length) * total_length, curvature) / height_half_sinusoidal,
-                orig_circular/height_circular + curve_circular((x - esser / total_length) * total_length, curvature) / height_circular,
-                shape
-            )
+        if curvature > 0.0 then
+            local orig_half_sinusoidal = curve_half_sinusoidal(esser, curvature)
+            local height_half_sinusoidal = 1.0 + orig_half_sinusoidal
+            local orig_circular = curve_circular(esser, curvature)
+            local height_circular = 1.0 + orig_circular
+            if x > esser / total_length then
+                result = mix(
+                    orig_half_sinusoidal/height_half_sinusoidal + curve_half_sinusoidal((x - esser / total_length) * total_length, curvature) / height_half_sinusoidal,
+                    orig_circular/height_circular + curve_circular((x - esser / total_length) * total_length, curvature) / height_circular,
+                    shape
+                )
+            else
+                result = mix(
+                    orig_half_sinusoidal/height_half_sinusoidal - curve_half_sinusoidal(esser - x * total_length, curvature) / height_half_sinusoidal,
+                    orig_circular/height_circular - curve_circular(esser - x * total_length, curvature) / height_circular,
+                    shape
+                )
+            end
         else
-            result = mix(
-                orig_half_sinusoidal/height_half_sinusoidal - curve_half_sinusoidal(esser - x * total_length, curvature) / height_half_sinusoidal,
-                orig_circular/height_circular - curve_circular(esser - x * total_length, curvature) / height_circular,
-                shape
-            )
+            local extra_half_sinusoidal = 1.0 - curve_half_sinusoidal(1.0 - esser, curvature)
+            local height_half_sinusoidal = (1.0 + extra_half_sinusoidal)
+            local extra_circular = 1.0 - curve_circular(1.0 - esser, curvature)
+            local height_circular = (1.0 + extra_half_sinusoidal)
+            if x < 1.0 - esser / total_length then
+                result = mix(
+                    curve_half_sinusoidal(x * total_length, curvature) / height_half_sinusoidal,
+                    curve_circular(x * total_length, curvature) / height_circular,
+                    shape
+                )
+            else
+                result = mix(
+                    (2.0 - curve_half_sinusoidal(1.0 - (x * total_length - 1.0), curvature)) / height_half_sinusoidal,
+                    (2.0 - curve_circular(1.0 - (x * total_length - 1.0), curvature)) / height_circular,
+                    shape
+                )
+            end
         end
 
     end

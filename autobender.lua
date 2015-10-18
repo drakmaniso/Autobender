@@ -1,12 +1,14 @@
 class "Autobender"
 
 require "AutobenderWindow"
-
+require "utils"
 
 ----------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function Autobender:__init()
+
     self.in_ui_update = false -- is the value change originated by the program (instead of the user)?
     self.in_automation_update = false
 
@@ -29,11 +31,12 @@ function Autobender:__init()
             end
         end
     )
+
 end
 
-
 ----------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function Autobender:handle_pattern_track_change()
     if self.window.dialog.visible then
@@ -51,9 +54,9 @@ function Autobender:handle_pattern_track_change()
     self:handle_parameter_change()
 end
 
-
 ----------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function Autobender:handle_parameter_change()
     local pattern_track = renoise.song().selected_pattern_track
@@ -76,9 +79,9 @@ function Autobender:handle_parameter_change()
     self:handle_selection_range_change()
 end
 
-
 ----------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function Autobender:handle_selection_range_change()
     if self.window.dialog.visible then
@@ -110,7 +113,13 @@ function Autobender:handle_selection_range_change()
             end
             local start_value = 0
             if start_prec and start_next then
-                start_value = self:point_on_line(selection_start, start_prec.time, start_prec.value, start_next.time, start_next.value)
+                start_value = self:point_on_line(
+                    selection_start,
+                    start_prec.time,
+                    start_prec.value,
+                    start_next.time,
+                    start_next.value
+                )
             elseif start_prec then
                 start_value = start_prec.value
             elseif start_next then
@@ -118,7 +127,13 @@ function Autobender:handle_selection_range_change()
             end
             local end_value = 0
             if end_prec and end_next then
-            end_value = self:point_on_line(selection_end, end_prec.time, end_prec.value, end_next.time, end_next.value)
+            end_value = self:point_on_line(
+                selection_end,
+                end_prec.time,
+                end_prec.value,
+                end_next.time,
+                end_next.value
+            )
             elseif end_next then
                 end_value = end_next.value
             elseif end_prec then
@@ -128,7 +143,7 @@ function Autobender:handle_selection_range_change()
 
             self.in_ui_update = true
             local views = self.window.vb.views
-            views["status"].text = "Selection: " .. selection_start - 1 .. " -  " .. selection_end - 1
+            views["status"].text = "Selection: " .. selection_start - 1 .. " - " .. selection_end - 1
             views["start"].value = start_value
             views["start"].active = true
             views["end"].value = end_value
@@ -147,9 +162,9 @@ function Autobender:handle_selection_range_change()
     end
 end
 
-
 ----------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function Autobender:point_on_line(x, x1, y1, x2, y2)
     local a = (y1 - y2) / (x1 - x2)
@@ -157,9 +172,9 @@ function Autobender:point_on_line(x, x1, y1, x2, y2)
     return a * x + b
 end
 
-
 ----------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function Autobender:update_automation()
     local automation = self.automation
@@ -224,7 +239,16 @@ function Autobender:update_automation()
         automation:add_point_at(automation.selection_start, start_value)
         automation:add_point_at(automation.selection_end, end_value)
         for p = automation.selection_start + step, automation.selection_end, step do
-            local v = self:point_on_curve(p, automation.selection_start, start_value, automation.selection_end, end_value, sign, curvature, shape)
+            local v = self:point_on_curve(
+                p,
+                automation.selection_start,
+                start_value,
+                automation.selection_end,
+                end_value,
+                sign,
+                curvature,
+                shape
+            )
             if v < 0.0 then v = 0.0 end
             if v > 1.0 then v = 1.0 end
             automation:add_point_at(p, v)
@@ -233,75 +257,109 @@ function Autobender:update_automation()
     end
 end
 
-
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-
 function Autobender:point_on_curve(x, x1, y1, x2, y2, sign, curvature, shape)
-    local position = (x - x1) / (x2 - x1)
-    local value = self:curve(position, sign, curvature, shape)
+    local x_normalised = (x - x1) / (x2 - x1)
+    local value = self:curve(x_normalised, sign, curvature, shape)
     return y1 + value * (y2 - y1)
 end
 
 
-function Autobender:curve(position, sign, curvature, shape)
+function Autobender:curve(x, sign, curvature, shape)
 
-    local exp_curvature = (100000.0 ^ (1.0 + curvature)) / 100000.0
-    local circ_curvature = 1.0 - ((1000.0 ^ (1.0 - curvature)) - 1.0) / (1000.0 - 1.0)
-    local sin_curvature = curvature
-
-    local exp_result, circ_result, sin_result, result
-    local pi = math.pi
-
-    if sign > 0.01 then
-
-        exp_result = 1.0 - ((exp_curvature ^ (1.0 - position)) - 1.0) / (exp_curvature - 1.0)
-
-        local new_position = (circ_curvature * position + (1.0 - circ_curvature) * 0.5)
-        local angle = math.acos(1.0 - new_position)
-        circ_result = math.sin(angle)
-        circ_result = (circ_result - math.sin(math.acos(1.0 - ((1.0 - circ_curvature) * 0.5))))
-            / (math.sin(math.acos(1.0 - (circ_curvature + (1.0 - circ_curvature) * 0.5))) - math.sin(math.acos(1.0 - ((1.0 - circ_curvature) * 0.5))))
-
-        sin_result = (1.0 - sin_curvature) * position + sin_curvature * math.sin(position * pi/2.0)
-
-    elseif sign < -0.01 then
-
-        exp_result = ((exp_curvature ^ position) - 1.0) / (exp_curvature - 1.0)
-
-        local new_position = (circ_curvature * position + (1.0 - circ_curvature) * 0.5)
-        local angle = math.acos(new_position)
-        circ_result = 1.0 - math.sin(angle)
-        circ_result = (circ_result - (1.0 - math.sin(math.acos((1.0 - circ_curvature) * 0.5))))
-            / (1.0 - math.sin(math.acos(circ_curvature + (1.0 - circ_curvature) * 0.5)) - 1.0 + math.sin(math.acos((1.0 - circ_curvature) * 0.5)))
-
-        sin_result = (1.0 - sin_curvature) * position + sin_curvature * (math.sin(3.0*math.pi/2.0 + position * math.pi/2.0) + 1.0)
-
-    else
-
-        sin_result = position
-        circ_result = position
-        exp_result = position
-
-    end
+    local result
 
     shape = 2.0 * shape
     if shape < 1.0 then
         shape = 2.0 * shape
         if shape < 1.0 then
-            result = (1.0 - shape) * position + shape * sin_result
+            result = mix(
+                x,
+                self:curve_sinusoidal(x, sign, curvature),
+                shape
+            )
         else
             shape = shape - 1.0
-            result = (1.0 - shape) * sin_result + shape * circ_result
+            result = mix(
+                self:curve_sinusoidal(x, sign, curvature),
+                self:curve_circular(x, sign, curvature),
+                shape
+            )
         end
     else
         shape = shape - 1.0
-        result = (1.0 - shape) * circ_result + shape * exp_result
+        result = mix(
+            self:curve_circular(x, sign, curvature),
+            self:curve_exponential(x, sign, curvature),
+            shape
+        )
     end
 
     return result
 
 end
 
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
+function Autobender:curve_exponential(x, sign, curvature)
+    curvature = (100000.0 ^ (1.0 + curvature)) / 100000.0
+    if sign > 0.01 then
+        return 1.0 - ((curvature ^ (1.0 - x)) - 1.0) / (curvature - 1.0)
+    elseif sign < -0.01 then
+        return ((curvature ^ x) - 1.0) / (curvature - 1.0)
+    else
+        return x
+    end
+end
+
+
+function Autobender:curve_circular(x, sign, curvature)
+    curvature = 1.0 - ((1000.0 ^ (1.0 - curvature)) - 1.0) / (1000.0 - 1.0)
+    if sign > 0.01 then
+        local new_position = (curvature * x + (1.0 - curvature) * 0.5)
+        local angle = math.acos(1.0 - new_position)
+        local result = math.sin(angle)
+        return (result - math.sin(math.acos(1.0 - ((1.0 - curvature) * 0.5))))
+            / (math.sin(math.acos(1.0 - (curvature + (1.0 - curvature) * 0.5))) - math.sin(math.acos(1.0 - ((1.0 - curvature) * 0.5))))
+    elseif sign < -0.01 then
+        local new_position = (curvature * x + (1.0 - curvature) * 0.5)
+        local angle = math.acos(new_position)
+        local result = 1.0 - math.sin(angle)
+        return (result - (1.0 - math.sin(math.acos((1.0 - curvature) * 0.5))))
+            / (1.0 - math.sin(math.acos(curvature + (1.0 - curvature) * 0.5)) - 1.0 + math.sin(math.acos((1.0 - curvature) * 0.5)))
+    else
+        return x
+    end
+end
+
+
+function Autobender:curve_sinusoidal(x, sign, curvature)
+    if sign > 0.01 then
+        return (1.0 - curvature) * x + curvature * math.sin(x * math.pi/2.0)
+    elseif sign < -0.01 then
+        return (1.0 - curvature) * x + curvature * (math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0)
+    else
+        return x
+    end
+end
+
+
+function Autobender:curve_logarithmic(x, sign, curvature)
+    curvature = (100000.0 ^ (1.0 + curvature)) / 100000.0
+    if sign > 0.01 then
+        return x
+    elseif sign < -0.01 then
+        return x
+    else
+        return x
+    end
+end
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------

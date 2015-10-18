@@ -3,7 +3,7 @@ class "Autobender"
 require "AutobenderWindow"
 require "utils"
 
-----------------------------------------------------------------------------------------------------
+    ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
@@ -222,6 +222,7 @@ function Autobender:update_automation()
                 shape = 1.0 - curve_x
             end
         end
+        curvature = sign * curvature
 
         local step = views["step"].value
         if step == 0 then
@@ -245,7 +246,6 @@ function Autobender:update_automation()
                 start_value,
                 automation.selection_end,
                 end_value,
-                sign,
                 curvature,
                 shape
             )
@@ -261,14 +261,14 @@ end
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-function Autobender:point_on_curve(x, x1, y1, x2, y2, sign, curvature, shape)
+function Autobender:point_on_curve(x, x1, y1, x2, y2, curvature, shape)
     local x_normalised = (x - x1) / (x2 - x1)
-    local value = self:curve(x_normalised, sign, curvature, shape)
+    local value = self:curve(x_normalised, curvature, shape)
     return y1 + value * (y2 - y1)
 end
 
 
-function Autobender:curve(x, sign, curvature, shape)
+function Autobender:curve(x, curvature, shape)
 
     local result
 
@@ -278,22 +278,22 @@ function Autobender:curve(x, sign, curvature, shape)
         if shape < 1.0 then
             result = mix(
                 x,
-                self:curve_sinusoidal(x, sign, curvature),
+                self:curve_sinusoidal(x, curvature),
                 shape
             )
         else
             shape = shape - 1.0
             result = mix(
-                self:curve_sinusoidal(x, sign, curvature),
-                self:curve_circular(x, sign, curvature),
+                self:curve_sinusoidal(x, curvature),
+                self:curve_circular(x, curvature),
                 shape
             )
         end
     else
         shape = shape - 1.0
         result = mix(
-            self:curve_circular(x, sign, curvature),
-            self:curve_exponential(x, sign, curvature),
+            self:curve_circular(x, curvature),
+            self:curve_exponential(x, curvature),
             shape
         )
     end
@@ -306,54 +306,55 @@ end
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-function Autobender:curve_exponential(x, sign, curvature)
-    curvature = (100000.0 ^ (1.0 + curvature)) / 100000.0
-    if sign > 0.01 then
-        return 1.0 - ((curvature ^ (1.0 - x)) - 1.0) / (curvature - 1.0)
-    elseif sign < -0.01 then
-        return ((curvature ^ x) - 1.0) / (curvature - 1.0)
+function Autobender:curve_exponential(x, curvature)
+    local b = (100000.0 ^ (1.0 + math.abs(curvature))) / 100000.0
+    if curvature > 0.01 then
+        return 1.0 - ((b ^ (1.0 - x)) - 1.0) / (b - 1.0)
+    elseif curvature < -0.01 then
+        return ((b ^ x) - 1.0) / (b - 1.0)
     else
         return x
     end
 end
 
 
-function Autobender:curve_circular(x, sign, curvature)
-    curvature = 1.0 - ((1000.0 ^ (1.0 - curvature)) - 1.0) / (1000.0 - 1.0)
-    if sign > 0.01 then
-        local new_position = (curvature * x + (1.0 - curvature) * 0.5)
+function Autobender:curve_circular(x, curvature)
+    local b = 1.0 - ((1000.0 ^ (1.0 - math.abs(curvature))) - 1.0) / (1000.0 - 1.0)
+    if curvature > 0.01 then
+        local new_position = (b * x + (1.0 - b) * 0.5)
         local angle = math.acos(1.0 - new_position)
         local result = math.sin(angle)
-        return (result - math.sin(math.acos(1.0 - ((1.0 - curvature) * 0.5))))
-            / (math.sin(math.acos(1.0 - (curvature + (1.0 - curvature) * 0.5))) - math.sin(math.acos(1.0 - ((1.0 - curvature) * 0.5))))
-    elseif sign < -0.01 then
-        local new_position = (curvature * x + (1.0 - curvature) * 0.5)
+        return (result - math.sin(math.acos(1.0 - ((1.0 - b) * 0.5))))
+            / (math.sin(math.acos(1.0 - (b + (1.0 - b) * 0.5))) - math.sin(math.acos(1.0 - ((1.0 - b) * 0.5))))
+    elseif curvature < -0.01 then
+        local new_position = (b * x + (1.0 - b) * 0.5)
         local angle = math.acos(new_position)
         local result = 1.0 - math.sin(angle)
-        return (result - (1.0 - math.sin(math.acos((1.0 - curvature) * 0.5))))
-            / (1.0 - math.sin(math.acos(curvature + (1.0 - curvature) * 0.5)) - 1.0 + math.sin(math.acos((1.0 - curvature) * 0.5)))
+        return (result - (1.0 - math.sin(math.acos((1.0 - b) * 0.5))))
+            / (1.0 - math.sin(math.acos(b + (1.0 - b) * 0.5)) - 1.0 + math.sin(math.acos((1.0 - b) * 0.5)))
     else
         return x
     end
 end
 
 
-function Autobender:curve_sinusoidal(x, sign, curvature)
-    if sign > 0.01 then
-        return (1.0 - curvature) * x + curvature * math.sin(x * math.pi/2.0)
-    elseif sign < -0.01 then
-        return (1.0 - curvature) * x + curvature * (math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0)
+function Autobender:curve_sinusoidal(x, curvature)
+    local b = math.abs(curvature)
+    if curvature > 0.01 then
+        return (1.0 - b) * x + b * math.sin(x * math.pi/2.0)
+    elseif curvature < -0.01 then
+        return (1.0 - b) * x + b * (math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0)
     else
         return x
     end
 end
 
 
-function Autobender:curve_logarithmic(x, sign, curvature)
-    curvature = (100000.0 ^ (1.0 + curvature)) / 100000.0
-    if sign > 0.01 then
+function Autobender:curve_logarithmic(x, curvature)
+    local b = math.abs(curvature)
+    if curvature > 0.01 then
         return x
-    elseif sign < -0.01 then
+    elseif curvature < -0.01 then
         return x
     else
         return x

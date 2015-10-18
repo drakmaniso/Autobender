@@ -115,7 +115,8 @@ function AutobenderWindow:gui ()
                 {
                     id = "mode",
                     width = "100%",
-                    items = {"exponential", "sinusoidal"},
+                    items = {"log", "exp", "sin"},
+                    value = 2,
                     notifier = function(value)
                         self.autobender.need_update = true
                     end,

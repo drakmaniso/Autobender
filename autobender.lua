@@ -242,97 +242,50 @@ function Autobender:curve(x, curvature, shape)
 
     local result
 
-    shape = 4.0 * shape
-    if shape < 1.0 then
+    -- local first_shape -- = self.window.vb.views["first_shape"].value
+    -- local second_shape -- = self.window.vb.views["second_shape"].value
+    local mode = self.window.vb.views["mode"].value
+    -- local mode_shapes = {
+    --     {1, 2},
+    --     {3, 4},
+    --     {5, 3}
+    -- }
+    -- result = mix(
+    --     curve_functions[mode_shapes[mode][1]](x, curvature),
+    --     curve_functions[mode_shapes[mode][2]](x, curvature),
+    --     shape
+    -- )
+    if mode == 1 then
         result = mix(
-            self:curve_exponential(x, curvature),
-            self:curve_logarithmic(x, curvature),
+            curve_exponential(x, curvature),
+            curve_logarithmic(x, curvature),
             shape
         )
-    elseif shape < 2.0 then
+    elseif mode == 2 then
         result = mix(
-            self:curve_logarithmic(x, curvature),
-            self:curve_circular(x, curvature),
-            shape - 1.0
-        )
-    elseif shape < 3.0 then
-        shape = shape
-        result = mix(
-            self:curve_circular(x, curvature),
-            self:curve_half_sinusoidal(x, curvature),
-            shape - 2.0
+            curve_half_sinusoidal(x, curvature),
+            curve_circular(x, curvature),
+            shape
         )
     else
-        shape = shape
-        result = mix(
-            self:curve_half_sinusoidal(x, curvature),
-            self:curve_sinusoidal(x, curvature),
-            shape - 3.0
-        )
+        shape = shape * 2.0
+        if shape < 1.0 then
+            result = mix(
+                curve_sinusoidal(x, curvature),
+                curve_half_sinusoidal(x, curvature),
+                shape
+            )
+        else
+            result = mix(
+                curve_half_sinusoidal(x, curvature),
+                curve_circular(x, curvature),
+                shape - 1.0
+            )
+        end
     end
 
     return result
 
-end
-
-----------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-function Autobender:curve_exponential(x, curvature)
-    local scale = 1.0
-    local b = -16.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
-    if math.abs(curvature) > 0.01 then
-        return (math.exp(b * x) - 1.0) / (math.exp(b) - 1.0)
-    else
-        return x
-    end
-end
-
-
-function Autobender:curve_logarithmic(x, curvature)
-    local scale = 1.0
-    local b = 16.0 * curvature * (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
-    if math.abs(curvature) > 0.01 then
-        return math.log(x * (math.exp(b) - 1.0) + 1.0) / b
-    else
-        return x
-    end
-end
-
-function Autobender:curve_circular(x, curvature)
-    local b = curvature
-    if math.abs(curvature) > 0.01 then
-        local new_position = (b * x + (1.0 - b) * 0.5)
-        local angle = math.acos(1.0 - new_position)
-        local result = math.sin(angle)
-        return (result - math.sin(math.acos(1.0 - ((1.0 - b) * 0.5))))
-            / (math.sin(math.acos(1.0 - (b + (1.0 - b) * 0.5))) - math.sin(math.acos(1.0 - ((1.0 - b) * 0.5))))
-    else
-        return x
-    end
-end
-
-function Autobender:curve_half_sinusoidal(x, curvature)
-    local b = math.abs(curvature)
-    if curvature > 0.01 then
-        return (1.0 - b) * x + b * math.sin(x * math.pi/2.0)
-    elseif curvature < -0.01 then
-        return (1.0 - b) * x + b * (math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0)
-    else
-        return x
-    end
-end
-
-function Autobender:curve_sinusoidal(x, curvature)
-    local b = math.abs(curvature)
-    if curvature > 0.01 then
-        return (1.0 - b) * x + b * (math.sin((x - 0.5) * math.pi) / 2.0 + 0.5)
-    elseif curvature < -0.01 then
-        return (1.0 - b) * x + b * (math.asin(2.0 * x - 1.0) / math.pi + 0.5)
-    else
-        return x
-    end
 end
 
 ----------------------------------------------------------------------------------------------------

@@ -45,6 +45,19 @@ end
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+AutobenderWindow.mode_names = {
+    "exponential",
+    "logarithmic",
+    "sinusoidal",
+    "half-sinusoidal",
+    "arc-sinusoidal",
+    "circular",
+}
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
 function AutobenderWindow:gui ()
 
     local vb = self.vb
@@ -98,6 +111,18 @@ function AutobenderWindow:gui ()
             vb:column
             {
 
+                vb:switch
+                {
+                    id = "mode",
+                    width = "100%",
+                    items = {"exp", "sin", "arc"},
+                    notifier = function(value)
+                        self.autobender.need_update = true
+                    end,
+                },
+
+                vb:row { height = 8, },
+
                 vb:xypad
                 {
                     id = "curve",
@@ -114,54 +139,6 @@ function AutobenderWindow:gui ()
                             self.autobender.need_update = true
                         end
                     end,
-                },
-
-                vb:row { height = 8, },
-
-                vb:horizontal_aligner
-                {
-                    width = "100%",
-                    mode = "justify",
-                    vb:button
-                    {
-                        width = "20%",
-                        text = "exp",
-                        notifier = function()
-                            vb.views["shape"].value = 0
-                        end,
-                    },
-                    vb:button
-                    {
-                        width = "20%",
-                        text = "log",
-                        notifier = function()
-                            vb.views["shape"].value = 250
-                        end,
-                    },
-                    vb:button
-                    {
-                        width = "20%",
-                        text = "cir",
-                        notifier = function()
-                            vb.views["shape"].value = 500
-                        end,
-                    },
-                    vb:button
-                    {
-                        width = "20%",
-                        text = "sin",
-                        notifier = function()
-                            vb.views["shape"].value = 750
-                        end,
-                    },
-                    vb:button
-                    {
-                        width = "20%",
-                        text = " s ",
-                        notifier = function()
-                            vb.views["shape"].value = 1000
-                        end,
-                    },
                 },
 
                 vb:row { height = 8, },
@@ -186,7 +163,8 @@ function AutobenderWindow:gui ()
                             self.autobender.need_update = true
                         end,
                         tostring = function(value)
-                            return "Shape:" .. (1.0 + value / 250.0)
+                            local v = 1.0 + value / 250.0
+                            return "Shape:" .. (math.floor(v * 100.0 + 0.5) / 100.0)
                         end,
                         tonumber = function(s)
                             return (tonumber(s) - 1.0) * 250.0

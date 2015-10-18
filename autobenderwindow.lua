@@ -82,7 +82,7 @@ function AutobenderWindow:gui ()
             vb:minislider
             {
                 id = "start",
-                height = 200,
+                height = "100%",
                 width = 24,
                 notifier = function(value)
                     local automation = self.autobender.automation
@@ -92,30 +92,69 @@ function AutobenderWindow:gui ()
                     end
                 end,
             },
+
             vb:column { width = 8 },
 
-
-            vb:xypad
+            vb:column
             {
-                id = "curve",
-                height = 200,
-                width = 200,
-                min = {x = 0.0, y = 0.0},
-                max = {x = 1.0, y = 1.0},
-                value = {x = 0.5, y = 0.5},
-                notifier = function(value)
-                    local automation = self.autobender.automation
-                    if automation and not self.autobender.in_ui_update then
-                        vb.views["status"].text = "X: " .. math.floor(value.x * 100.0 + 0.5) .. "   Y: " .. math.floor(value.y * 100.0 + 0.5)
-                        self.autobender.need_update = true
-                    end
-                end,
+
+                vb:xypad
+                {
+                    id = "curve",
+                    height = 200,
+                    width = 200,
+                    min = {x = 0.0, y = 0.0},
+                    max = {x = 1.0, y = 1.0},
+                    value = {x = 0.5, y = 0.5},
+                    notifier = function(value)
+                        local automation = self.autobender.automation
+                        if automation and not self.autobender.in_ui_update then
+                            vb.views["status"].text = "X: " .. math.floor(value.x * 100.0 + 0.5) .. "   Y: " .. math.floor(value.y * 100.0 + 0.5)
+                            self:update_curvature_and_shape_rotaries()
+                            self.autobender.need_update = true
+                        end
+                    end,
+                },
+
+                vb:row { height = 8, },
+
+                vb:horizontal_aligner
+                {
+                    mode = "distribute",
+                    vb:rotary
+                    {
+                        id = "curvature",
+                        width = 48,
+                        height = 48,
+                        min = -1.0,
+                        max = 1.0,
+                        value = 0.0,
+                        notifier = function()
+                            self.autobender.need_update = true
+                        end,
+                    },
+                    vb:rotary
+                    {
+                        id = "shape",
+                        width = 48,
+                        height = 48,
+                        min = 0.0,
+                        max = 1.0,
+                        value = 0.0,
+                        notifier = function()
+                            self.autobender.need_update = true
+                        end,
+                    },
+                },
+
             },
+
             vb:column { width = 8 },
+
             vb:minislider
             {
                 id = "end",
-                height = 200,
+                height = "100%",
                 width = 24,
                 notifier = function(value)
                     local automation = self.autobender.automation
@@ -127,7 +166,6 @@ function AutobenderWindow:gui ()
             },
 
         },
-
 
         vb:horizontal_aligner
         {
@@ -165,6 +203,56 @@ function AutobenderWindow:gui ()
     }
 
     return result
+
+end
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+function AutobenderWindow:update_curvature_and_shape_rotaries()
+
+    local start_value = self.vb.views["start"].value
+    local end_value = self.vb.views["end"].value
+
+    local curve_x = self.vb.views["curve"].value.x
+    local curve_y = self.vb.views["curve"].value.y
+    local sign
+    local curvature
+    local shape
+    if start_value < end_value then
+        if curve_x == curve_y then
+            sign = 0.0
+            curvature = 0.0
+            shape = 0.0
+        elseif curve_y > curve_x then
+            sign = 1.0
+            curvature = (curve_y - curve_x) / (1.0 - curve_x)
+            shape = 1.0 - curve_x
+        else
+            sign = -1.0
+            curvature = 1.0 - curve_y / curve_x
+            shape = curve_x
+        end
+    else
+        if curve_x == (1.0 - curve_y) then
+            sign = 0.0
+            curvature = 0.0
+            shape = 0.0
+        elseif curve_x > (1.0 - curve_y) then
+            sign = -1.0
+            curvature = (curve_y - (1.0 - curve_x)) / curve_x
+            shape = curve_x
+        else
+            sign = 1.0
+            curvature = 1.0 - (curve_y / (1.0 - curve_x))
+            shape = 1.0 - curve_x
+        end
+    end
+    curvature = sign * curvature
+
+    self.vb.views["curvature"].value = curvature
+    self.vb.views["shape"].value = shape
 
 end
 

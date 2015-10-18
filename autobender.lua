@@ -188,41 +188,8 @@ function Autobender:update_automation()
         local start_value = views["start"].value
         local end_value = views["end"].value
 
-        local curve_x = views["curve"].value.x
-        local curve_y = views["curve"].value.y
-        local sign
-        local curvature
-        local shape
-        if start_value < end_value then
-            if curve_x == curve_y then
-                sign = 0.0
-                curvature = 0.0
-                shape = 0.0
-            elseif curve_y > curve_x then
-                sign = 1.0
-                curvature = (curve_y - curve_x) / (1.0 - curve_x)
-                shape = 1.0 - curve_x
-            else
-                sign = -1.0
-                curvature = 1.0 - curve_y / curve_x
-                shape = curve_x
-            end
-        else
-            if curve_x == (1.0 - curve_y) then
-                sign = 0.0
-                curvature = 0.0
-                shape = 0.0
-            elseif curve_x > (1.0 - curve_y) then
-                sign = -1.0
-                curvature = (curve_y - (1.0 - curve_x)) / curve_x
-                shape = curve_x
-            else
-                sign = 1.0
-                curvature = 1.0 - (curve_y / (1.0 - curve_x))
-                shape = 1.0 - curve_x
-            end
-        end
-        curvature = sign * curvature
+        local curvature = views["curvature"].value
+        local shape = views["shape"].value
 
         local step = views["step"].value
         if step == 0 then

@@ -7,6 +7,13 @@ class "AutobenderWindow"
 function AutobenderWindow:__init(autobender)
     self.vb = renoise.ViewBuilder()
     self.autobender = autobender
+    renoise.tool().app_release_document_observable:add_notifier(
+        function()
+            if self.dialog and self.dialog.visible then
+                self.dialog:close()
+            end
+        end
+    )
 end
 
 ----------------------------------------------------------------------------------------------------

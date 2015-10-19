@@ -77,16 +77,6 @@ function AutobenderWindow:gui ()
         spacing = dialog_spacing,
         uniform = true,
 
-        vb:text
-        {
-            id = "status",
-            text = "(No selection)",
-            width = "100%",
-            font = "big",
-            align = "center",
-        },
-
-
         vb:horizontal_aligner
         {
             width = "100%",
@@ -111,87 +101,23 @@ function AutobenderWindow:gui ()
             vb:column
             {
 
-                vb:switch
+                vb:column
                 {
-                    id = "mode",
                     width = "100%",
-                    items = {"log", "exp", "sin"},
-                    value = 2,
-                    notifier = function(value)
-                        self.autobender.need_update = true
-                    end,
+                    -- mode = "center",
+                    style = "group",
+                    vb:text
+                    {
+                        id = "status",
+                        text = "(No selection)",
+                        width = "100%",
+                        height = 42,
+                        font = "big",
+                        align = "center",
+                    },
                 },
 
                 vb:row { height = 8, },
-
-                vb:minislider
-                {
-                    id = "shape",
-                    width = "100%",
-                    height = 16,
-                    min = -1.0,
-                    max = 1.0,
-                    value = 0.0,
-                    notifier = function(value)
-                        self.autobender.need_update = true
-                    end,
-                },
-
-                vb:row { height = 8, },
-
-                -- vb:horizontal_aligner
-                -- {
-                --     mode = "distribute",
-                --     vb:valuebox
-                --     {
-                --         id = "shape",
-                --         width = "50%",
-                --         min = 0,
-                --         max = 1000,
-                --         value = 0,
-                --         notifier = function(value)
-                --             vb.views["status"].text = "Shape: " .. value
-                --             if not self.autobender.in_ui_update then
-                --                 self.autobender.in_ui_update = true
-                --                 vb.views["curve"].value = { x = value / 1000.0, y = vb.views["curve"].value.y}
-                --                 self.autobender.in_ui_update = false
-                --             end
-                --             self.autobender.need_update = true
-                --         end,
-                --         tostring = function(value)
-                --             local v = 1.0 + value / 250.0
-                --             return "Shape:" .. (math.floor(v * 100.0 + 0.5) / 100.0)
-                --         end,
-                --         tonumber = function(s)
-                --             return (tonumber(s) - 1.0) * 250.0
-                --         end,
-                --     },
-                --     vb:valuebox
-                --     {
-                --         id = "curvature",
-                --         width = "50%",
-                --         min = -1000,
-                --         max = 1000,
-                --         value = 0,
-                --         notifier = function(value)
-                --             vb.views["status"].text = "Curvature: " .. value
-                --             if not self.autobender.in_ui_update then
-                --                 self.autobender.in_ui_update = true
-                --                 vb.views["curve"].value = { x = vb.views["curve"].value.x, y = value / 1000.0}
-                --                 self.autobender.in_ui_update = false
-                --             end
-                --             self.autobender.need_update = true
-                --         end,
-                --         tostring = function(value)
-                --             return "Curve:" .. value / 10.0
-                --         end,
-                --         tonumber = function(s)
-                --             return tonumber(s) * 10
-                --         end,
-                --     },
-                -- },
-                --
-                -- vb:row { height = 8, },
 
                 vb:xypad
                 {
@@ -204,10 +130,56 @@ function AutobenderWindow:gui ()
                     notifier = function(value)
                         local automation = self.autobender.automation
                         if automation and not self.autobender.in_ui_update then
-                            vb.views["status"].text = "X: " .. math.floor(value.x * 100.0 + 0.5) .. "   Y: " .. math.floor(value.y * 100.0 + 0.5)
+                            vb.views["status"].text = "Torsion: " .. math.floor(value.x * 50.0 + 0.5) .. "   Curvature: " .. math.floor(value.y * 100.0 + 0.5)
                             self:update_curvature_and_shape_rotaries()
                             self.autobender.need_update = true
                         end
+                    end,
+                },
+
+                vb:row { height = 8, },
+
+                vb:minislider
+                {
+                    id = "shape",
+                    width = 200,
+                    height = 16,
+                    min = -1.0,
+                    max = 1.0,
+                    value = 0.0,
+                    notifier = function(value)
+                        vb.views["status"].text = "Shape: " .. (math.floor(value * 100.0 + 0.5) / 1.0)
+                        self.autobender.need_update = true
+                    end,
+                },
+
+                vb:row { height = 8, },
+
+                vb:valuebox
+                {
+                    id = "step",
+                    width = 200,
+                    min = 0,
+                    max = 16 + 2,
+                    value = 3,
+                    tostring = function(n)
+                        if n == 0 then
+                            return "8 points per line"
+                        elseif n == 1 then
+                            return "4 points per line"
+                        elseif n == 2 then
+                            return "2 points per line"
+                        elseif n == 3 then
+                            return "1 point per line"
+                        else
+                            return "1 point every " .. n - 2 .. " lines"
+                        end
+                    end,
+                    tonumber = function(s)
+                        return 3
+                    end,
+                    notifier = function()
+                        self.autobender.need_update = true
                     end,
                 },
 
@@ -229,38 +201,6 @@ function AutobenderWindow:gui ()
                 end,
             },
 
-        },
-
-        vb:horizontal_aligner
-        {
-            mode = "center",
-            vb:valuebox
-            {
-                id = "step",
-                width = 200,
-                min = 0,
-                max = 16 + 2,
-                value = 3,
-                tostring = function(n)
-                    if n == 0 then
-                        return "8 points per line"
-                    elseif n == 1 then
-                        return "4 points per line"
-                    elseif n == 2 then
-                        return "2 points per line"
-                    elseif n == 3 then
-                        return "1 point per line"
-                    else
-                        return "1 point every " .. n - 2 .. " lines"
-                    end
-                end,
-                tonumber = function(s)
-                    return 3
-                end,
-                notifier = function()
-                    self.autobender.need_update = true
-                end,
-            },
         },
 
 

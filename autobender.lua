@@ -203,6 +203,8 @@ function Autobender:update_automation()
             torsion = 2.0 - torsion
             curvature = - curvature
         end
+        local torsion_scale = 1.0
+        torsion = (math.exp(torsion_scale * math.abs(torsion)) - 1.0) / (math.exp(torsion_scale) - 1.0)
 
         local step = views["step"].value
         if step == 0 then

@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Autobender</Name>
   <Id>org.drakmaniso.Autobender</Id>
-  <Version>0.01</Version>
+  <Version>1.0</Version>
   <ApiVersion>5</ApiVersion>
   <Author>drakmaniso | moussault.laurent@gmail.com</Author>
   <AutoUpgraded>false</AutoUpgraded>

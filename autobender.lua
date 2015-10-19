@@ -125,6 +125,7 @@ function Autobender:handle_selection_range_change()
             elseif start_next then
                 start_value = start_next.value
             end
+            if start_value > 1.0 then start_value = 1.0 elseif start_value < 0.0 then start_value = 0.0 end
             local end_value = 0
             if end_prec and end_next then
             end_value = self:point_on_line(
@@ -139,7 +140,7 @@ function Autobender:handle_selection_range_change()
             elseif end_prec then
                 end_value = end_prec.value
             end
-            if end_value > 1.0 then end_value = 1.0 end
+            if end_value > 1.0 then end_value = 1.0 elseif end_value < 0.0 then end_value = 0.0 end
 
             self.in_ui_update = true
             local views = self.window.vb.views

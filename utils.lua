@@ -51,9 +51,27 @@ end
 function curve_half_sinusoidal(x, curvature)
     local b = math.abs(curvature)
     if curvature > 0.01 then
-        return (1.0 - b) * x + b * math.sin(x * math.pi/2.0)
+        if b <= 0.5 then
+            b = 2.0 * b
+            return (1.0 - b) * x + b * math.sin(x * math.pi/2.0)
+        else
+            return mix(
+                math.sin(x * math.pi/2.0),
+                math.sin(math.acos(1.0 - x)),
+                2.0 * curvature - 1.0
+            )
+        end
     elseif curvature < -0.01 then
-        return (1.0 - b) * x + b * (math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0)
+        if b <= 0.5 then
+            b = 2.0 * b
+            return (1.0 - b) * x + b * (math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0)
+        else
+            return mix(
+                math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0,
+                1.0 - math.sin(math.acos(x)),
+                2.0 * -curvature - 1.0
+            )
+        end
     else
         return x
     end

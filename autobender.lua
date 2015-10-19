@@ -143,7 +143,15 @@ function Autobender:handle_selection_range_change()
 
             self.in_ui_update = true
             local views = self.window.vb.views
-            views["status"].text = "Selection: " .. selection_start - 1 .. " - " .. selection_end - 1
+            local start_string = "" .. math.floor(selection_start) - 1
+            if selection_start - math.floor(selection_start) ~= 0 then
+                start_string = start_string .. "." .. (selection_start - math.floor(selection_start)) / (1.0 / 256.0)
+            end
+            local end_string = "" .. math.floor(selection_end) - 1
+            if selection_end - math.floor(selection_end) ~= 0 then
+                end_string = end_string .. "." .. (selection_end - math.floor(selection_end)) / (1.0 / 256.0)
+            end
+            views["status"].text = "Selection: " .. start_string .. " - " .. end_string
             views["start"].value = start_value
             views["start"].active = true
             views["end"].value = end_value

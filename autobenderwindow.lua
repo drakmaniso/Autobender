@@ -126,10 +126,10 @@ function AutobenderWindow:gui ()
 
                 vb:minislider
                 {
-                    id = "esser",
+                    id = "shape",
                     width = "100%",
                     height = 16,
-                    min = 0.0,
+                    min = -1.0,
                     max = 1.0,
                     value = 0.0,
                     notifier = function(value)
@@ -139,67 +139,67 @@ function AutobenderWindow:gui ()
 
                 vb:row { height = 8, },
 
-                vb:horizontal_aligner
-                {
-                    mode = "distribute",
-                    vb:valuebox
-                    {
-                        id = "shape",
-                        width = "50%",
-                        min = 0,
-                        max = 1000,
-                        value = 0,
-                        notifier = function(value)
-                            vb.views["status"].text = "Shape: " .. value
-                            if not self.autobender.in_ui_update then
-                                self.autobender.in_ui_update = true
-                                vb.views["curve"].value = { x = value / 1000.0, y = vb.views["curve"].value.y}
-                                self.autobender.in_ui_update = false
-                            end
-                            self.autobender.need_update = true
-                        end,
-                        tostring = function(value)
-                            local v = 1.0 + value / 250.0
-                            return "Shape:" .. (math.floor(v * 100.0 + 0.5) / 100.0)
-                        end,
-                        tonumber = function(s)
-                            return (tonumber(s) - 1.0) * 250.0
-                        end,
-                    },
-                    vb:valuebox
-                    {
-                        id = "curvature",
-                        width = "50%",
-                        min = -1000,
-                        max = 1000,
-                        value = 0,
-                        notifier = function(value)
-                            vb.views["status"].text = "Curvature: " .. value
-                            if not self.autobender.in_ui_update then
-                                self.autobender.in_ui_update = true
-                                vb.views["curve"].value = { x = vb.views["curve"].value.x, y = value / 1000.0}
-                                self.autobender.in_ui_update = false
-                            end
-                            self.autobender.need_update = true
-                        end,
-                        tostring = function(value)
-                            return "Curve:" .. value / 10.0
-                        end,
-                        tonumber = function(s)
-                            return tonumber(s) * 10
-                        end,
-                    },
-                },
-
-                vb:row { height = 8, },
+                -- vb:horizontal_aligner
+                -- {
+                --     mode = "distribute",
+                --     vb:valuebox
+                --     {
+                --         id = "shape",
+                --         width = "50%",
+                --         min = 0,
+                --         max = 1000,
+                --         value = 0,
+                --         notifier = function(value)
+                --             vb.views["status"].text = "Shape: " .. value
+                --             if not self.autobender.in_ui_update then
+                --                 self.autobender.in_ui_update = true
+                --                 vb.views["curve"].value = { x = value / 1000.0, y = vb.views["curve"].value.y}
+                --                 self.autobender.in_ui_update = false
+                --             end
+                --             self.autobender.need_update = true
+                --         end,
+                --         tostring = function(value)
+                --             local v = 1.0 + value / 250.0
+                --             return "Shape:" .. (math.floor(v * 100.0 + 0.5) / 100.0)
+                --         end,
+                --         tonumber = function(s)
+                --             return (tonumber(s) - 1.0) * 250.0
+                --         end,
+                --     },
+                --     vb:valuebox
+                --     {
+                --         id = "curvature",
+                --         width = "50%",
+                --         min = -1000,
+                --         max = 1000,
+                --         value = 0,
+                --         notifier = function(value)
+                --             vb.views["status"].text = "Curvature: " .. value
+                --             if not self.autobender.in_ui_update then
+                --                 self.autobender.in_ui_update = true
+                --                 vb.views["curve"].value = { x = vb.views["curve"].value.x, y = value / 1000.0}
+                --                 self.autobender.in_ui_update = false
+                --             end
+                --             self.autobender.need_update = true
+                --         end,
+                --         tostring = function(value)
+                --             return "Curve:" .. value / 10.0
+                --         end,
+                --         tonumber = function(s)
+                --             return tonumber(s) * 10
+                --         end,
+                --     },
+                -- },
+                --
+                -- vb:row { height = 8, },
 
                 vb:xypad
                 {
                     id = "curve",
                     height = 200,
                     width = 200,
-                    min = {x = 0.0, y = -1.0},
-                    max = {x = 1.0, y = 1.0},
+                    min = {x = 0.0, y = 0.0},
+                    max = {x = 2.0, y = 1.0},
                     value = {x = 0.0, y = 0.0},
                     notifier = function(value)
                         local automation = self.autobender.automation
@@ -276,20 +276,20 @@ end
 
 function AutobenderWindow:update_curvature_and_shape_rotaries()
 
-    if not self.autobender.in_ui_update then
-
-        local start_value = self.vb.views["start"].value
-        local end_value = self.vb.views["end"].value
-
-        local curve_x = self.vb.views["curve"].value.x
-        local curve_y = self.vb.views["curve"].value.y
-
-        self.autobender.in_ui_update = true
-        self.vb.views["curvature"].value = math.floor(1000.0 * curve_y + 0.5)
-        self.vb.views["shape"].value = math.floor(1000.0 * curve_x + 0.5)
-        self.autobender.in_ui_update = false
-
-    end
+    -- if not self.autobender.in_ui_update then
+    --
+    --     local start_value = self.vb.views["start"].value
+    --     local end_value = self.vb.views["end"].value
+    --
+    --     local curve_x = self.vb.views["curve"].value.x
+    --     local curve_y = self.vb.views["curve"].value.y
+    --
+    --     self.autobender.in_ui_update = true
+    --     self.vb.views["curvature"].value = math.floor(1000.0 * curve_y + 0.5)
+    --     self.vb.views["shape"].value = math.floor(1000.0 * curve_x + 0.5)
+    --     self.autobender.in_ui_update = false
+    --
+    -- end
 
 end
 

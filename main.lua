@@ -5,5 +5,10 @@ require "autobender"
 
 renoise.tool():add_menu_entry {
     name = "Track Automation:Autobender...",
-    invoke = function () Autobender () end
+    invoke = function () Autobender() end
+}
+
+renoise.tool():add_keybinding {
+    name = "Global:Tools:Autobender...",
+    invoke = function () Autobender() end
 }

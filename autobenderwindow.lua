@@ -148,7 +148,20 @@ function AutobenderWindow:gui ()
                     max = 1.0,
                     value = 0.0,
                     notifier = function(value)
-                        vb.views["status"].text = "Shape: " .. (math.floor(value * 100.0 + 0.5) / 1.0)
+                        local shape_string
+                        local percent = math.floor(value * 100.0 + 0.5)
+                        if percent == -100 then
+                            shape_string = "logarithmic"
+                        elseif percent < 0 then
+                            shape_string = "" .. -percent .. "% log  " .. 100+percent .. "% exp"
+                        elseif percent == 0 then
+                            shape_string = "exponential"
+                        elseif percent < 100 then
+                            shape_string = "" .. 100-percent .. "% exp  " .. percent .. "% sin"
+                        else
+                            shape_string = "sinusoidal"
+                        end
+                        vb.views["status"].text = "Shape: " .. shape_string
                         self.autobender.need_update = true
                     end,
                 },

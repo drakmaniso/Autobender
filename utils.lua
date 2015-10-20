@@ -14,7 +14,7 @@ function curve_exponential(x, curvature)
     local scale = 2.0
     local sign = curvature < 0.0 and -1.0 or 1.0
     local b = (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
-    b = -10.0 * sign * b
+    b = -5.0 * sign * b
     if math.abs(curvature) > 0.01 then
         return (math.exp(b * x) - 1.0) / (math.exp(b) - 1.0)
     else
@@ -27,7 +27,7 @@ function curve_logarithmic(x, curvature)
     local scale = 2.0
     local sign = curvature < 0.0 and -1.0 or 1.0
     local b = (math.exp(scale * math.abs(curvature)) - 1.0) / (math.exp(scale) - 1.0)
-    b = 10.0 * sign * b
+    b = 5.0 * sign * b
     if math.abs(curvature) > 0.01 then
         return math.log(x * (math.exp(b) - 1.0) + 1.0) / b
     else
@@ -57,7 +57,7 @@ function curve_half_sinusoidal(x, curvature)
         else
             return mix(
                 math.sin(x * math.pi/2.0),
-                math.sin(math.acos(1.0 - x)),
+                math.sin(math.sin(x * math.pi/2.0) * math.pi/2.0),
                 2.0 * curvature - 1.0
             )
         end
@@ -68,7 +68,7 @@ function curve_half_sinusoidal(x, curvature)
         else
             return mix(
                 math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0,
-                1.0 - math.sin(math.acos(x)),
+                math.sin(3.0*math.pi/2.0 + (math.sin(3.0*math.pi/2.0 + x * math.pi/2.0) + 1.0) * math.pi/2.0) + 1.0,
                 2.0 * -curvature - 1.0
             )
         end

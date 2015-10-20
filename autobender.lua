@@ -208,12 +208,11 @@ function Autobender:update_automation()
         local shape = views["shape"].value
         local torsion = views["curve"].value.x
         local curvature = views["curve"].value.y
-        if torsion > 1.0 then
-            torsion = 2.0 - torsion
-            curvature = - curvature
+        if start_value > end_value then
+            curvature =  - curvature
         end
-        local torsion_scale = 1.0
-        torsion = (math.exp(torsion_scale * math.abs(torsion)) - 1.0) / (math.exp(torsion_scale) - 1.0)
+        -- local torsion_scale = 1.0
+        -- torsion = (math.exp(torsion_scale * math.abs(torsion)) - 1.0) / (math.exp(torsion_scale) - 1.0)
 
         local step = views["step"].value
         if step == 0 then
@@ -275,9 +274,8 @@ function Autobender:curve(x, shape, torsion, curvature)
         curve_b = curve_half_sinusoidal
     end
 
-    local total_length = 1.0 + torsion
-
-    if curvature > 0.0 then
+    if torsion < 1.0 then
+        local total_length = 1.0 + torsion
         local orig_a = curve_a(torsion, curvature)
         local height_a = 1.0 + orig_a
         local orig_b = curve_b(torsion, curvature)
@@ -296,6 +294,9 @@ function Autobender:curve(x, shape, torsion, curvature)
             )
         end
     else
+        torsion = 2.0 - torsion
+        curvature = - curvature
+        local total_length = 1.0 + torsion
         local extra_a = 1.0 - curve_a(1.0 - torsion, curvature)
         local height_a = (1.0 + extra_a)
         local extra_b = 1.0 - curve_b(1.0 - torsion, curvature)

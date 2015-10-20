@@ -131,7 +131,7 @@ function AutobenderWindow:gui ()
                     id = "curve",
                     height = 200,
                     width = 200,
-                    min = {x = 0.0, y = 0.0},
+                    min = {x = 0.0, y = -1.0},
                     max = {x = 2.0, y = 1.0},
                     value = {x = 0.0, y = 0.0},
                     notifier = function(value)

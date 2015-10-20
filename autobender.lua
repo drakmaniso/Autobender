@@ -61,7 +61,11 @@ end
 function Autobender:handle_parameter_change()
     local pattern_track = renoise.song().selected_pattern_track
     local parameter = renoise.song().selected_automation_parameter
-    self.automation = pattern_track:find_automation(parameter)
+    if parameter then
+        self.automation = pattern_track:find_automation(parameter)
+    else
+        self.automation = nil
+    end
     if self.automation then
         self.automation.selection_range_observable:add_notifier(
             function()
@@ -87,7 +91,11 @@ function Autobender:handle_selection_range_change()
     if self.window.dialog.visible then
         local pattern_track = renoise.song().selected_pattern_track
         local parameter = renoise.song().selected_automation_parameter
-        self.automation = pattern_track:find_automation(parameter)
+        if parameter then
+            self.automation = pattern_track:find_automation(parameter)
+        else
+            self.automation = nil
+        end
         if
             self.automation
             and self.automation.selection_start < self.automation.selection_end

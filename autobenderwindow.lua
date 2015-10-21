@@ -156,7 +156,6 @@ function AutobenderWindow:gui ()
                         local automation = self.autobender.automation
                         if automation and not self.autobender.in_ui_update then
                             vb.views["status"].text = "Torsion: " .. math.floor(value.x * 50.0 + 0.5) .. "   Curvature: " .. math.floor(value.y * 100.0 + 0.5)
-                            self:update_curvature_and_shape_rotaries()
                             self.autobender.need_update = true
                         end
                     end,
@@ -246,29 +245,6 @@ function AutobenderWindow:gui ()
     }
 
     return result
-
-end
-
-----------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-function AutobenderWindow:update_curvature_and_shape_rotaries()
-
-    -- if not self.autobender.in_ui_update then
-    --
-    --     local start_value = self.vb.views["start"].value
-    --     local end_value = self.vb.views["end"].value
-    --
-    --     local curve_x = self.vb.views["curve"].value.x
-    --     local curve_y = self.vb.views["curve"].value.y
-    --
-    --     self.autobender.in_ui_update = true
-    --     self.vb.views["curvature"].value = math.floor(1000.0 * curve_y + 0.5)
-    --     self.vb.views["shape"].value = math.floor(1000.0 * curve_x + 0.5)
-    --     self.autobender.in_ui_update = false
-    --
-    -- end
 
 end
 

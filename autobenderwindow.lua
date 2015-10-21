@@ -52,6 +52,23 @@ end
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+function AutobenderWindow:check_slope()
+    local start_value = self.vb.views["start"].value
+    local end_value = self.vb.views["end"].value
+    local slope_is_upward = start_value < end_value
+    if self.slope_is_upward ~= slope_is_upward then
+        self.vb.views["curve"].value = {
+                x = self.vb.views["curve"].value.x,
+                y = - self.vb.views["curve"].value.y
+        }
+        self.slope_is_upward = slope_is_upward
+    end
+end
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
 AutobenderWindow.mode_names = {
     "exponential",
     "logarithmic",
@@ -95,6 +112,7 @@ function AutobenderWindow:gui ()
                 height = "100%",
                 width = 24,
                 notifier = function(value)
+                    self:check_slope()
                     local automation = self.autobender.automation
                     if automation and not self.autobender.in_ui_update then
                         vb.views["status"].text = "Start: " .. (math.floor(value * 100.0 + 0.5) / 1.0)
@@ -213,6 +231,7 @@ function AutobenderWindow:gui ()
                 height = "100%",
                 width = 24,
                 notifier = function(value)
+                    self:check_slope()
                     local automation = self.autobender.automation
                     if automation and not self.autobender.in_ui_update then
                         vb.views["status"].text = "End: " .. (math.floor(value * 100.0 + 0.5) / 1.0)
